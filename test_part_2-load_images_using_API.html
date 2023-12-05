@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalog</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        .loader {
+            display: none;
+            border: 5px solid #3498db;
+            border-top: 5px solid transparent;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            position: absolute;
+            top: calc(50% - 20px);
+            left: calc(50% - 20px);
+            transform: translate(-50%, -50%);
+        }
+
+        .product {
+            display: inline-block;
+            vertical-align: top;
+        }
+        .product img{
+            padding: 10px;
+            max-width: 300px;
+            width: 100%;
+        }
+
+        button#load-more {
+            display: none;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>    
+
+</head>
+<body>
+    <div class="loader" id="loader"></div>
+    <div class="product-container" id="product-container"></div>
+    <button id="load-more">Load More</button>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const loader = document.getElementById("loader");
+            const productContainer = document.getElementById("product-container");
+            const loadMoreButton = document.getElementById("load-more");
+
+            let records = [];
+            let currentIndex = 0;
+            const itemsPerPage = 5;
+
+            function fetchData() {
+                loader.style.display = "block";
+                loadMoreButton.style.display = "none";
+
+                fetch("https://api.airtable.com/v0/appElurJfZ2WmdIUg/Furniture/?api_key=keys1gmUsZYDi7y0g")
+                .then(response => response.json())
+                .then(data => {
+                    records = data.records;
+                    loader.style.display = "none";
+                    renderProducts();
+                })
+                .catch(error => {
+                    console.error("Error fetching data: " + error);
+                });
+            }
+
+            function renderProducts() {
+                const endIndex = currentIndex + itemsPerPage;
+                for (let i = currentIndex; i < endIndex && i < records.length; i++) {
+                    const product = records[i].fields;
+                    const productDiv = document.createElement("div");
+                    productDiv.className = "product";
+                    productDiv.innerHTML = `<img src="${product.Images[0].url}" alt="${product.Name}">`;
+                    productContainer.appendChild(productDiv);
+                }
+
+                if (endIndex >= records.length) {
+                    loadMoreButton.style.display = "none";
+                } else {
+                    loadMoreButton.style.display = "block";
+                }
+
+                currentIndex = endIndex;
+            }
+
+            loadMoreButton.addEventListener("click", renderProducts);
+
+            fetchData();
+        });
+
+    </script>
+</body>
+</html>
